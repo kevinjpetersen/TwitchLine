@@ -1,0 +1,20 @@
+﻿@page "/"
+@using TwitchLine.Data
+@inject TwitchLineService CmdService
+
+<div id="twitchline-container">
+    <div id="twitchline-cmd">
+        <textarea id="twitchline-cmd-output">@CmdOutput</textarea>
+    </div>
+    <div id="twitchline-video">
+        <webview id="twitchline-webview" src="https://player.twitch.tv/?channel=kyle&enableExtensions=true&muted=false&player=popout"></webview>
+    </div>
+</div>
+
+@code {
+    public string CmdOutput { get; set; }
+
+    protected override void OnInitialized()
+    {
+    }
+}
