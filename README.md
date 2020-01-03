@@ -3,7 +3,7 @@
 
 TwitchLine is a Command Line with integrated Twitch that only plays when it's running commands to take full advantage of work and fun!
 
-<a href="https://github.com/kevinjpetersen/TwitchLine/releases/tag/v1.0" target="_blank">Download (Windows only at the moment)</a>
+* <a href="https://github.com/kevinjpetersen/TwitchLine/releases/tag/v1.0" target="_blank">Download (Windows only at the moment)</a>
 
 # What is this?
 TwitchLine is suppose to be a fun alternative to the boring old Command Line Terminal that we all know, by combining fun and work to not waste a single second of time!
