@@ -1,20 +1,168 @@
 ﻿@page "/"
+@inject IJSRuntime JsRuntime
+@inject TwitchLineService TLS
+@using System.Threading
 @using TwitchLine.Data
-@inject TwitchLineService CmdService
 
 <div id="twitchline-container">
     <div id="twitchline-cmd">
         <textarea id="twitchline-cmd-output">@CmdOutput</textarea>
+        <input id="twitchline-cmd-input" @bind="CmdInput" type="text" @onkeyup="UI_CmdInputKeyUp" />
     </div>
     <div id="twitchline-video">
-        <webview id="twitchline-webview" src="https://player.twitch.tv/?channel=kyle&enableExtensions=true&muted=false&player=popout"></webview>
+        <div id="twitchline-view"></div>
     </div>
 </div>
 
 @code {
     public string CmdOutput { get; set; }
+    public string CmdInput { get; set; }
+    public bool IsFirstTime { get; set; }
+    public bool IsCmdServiceRunning { get; set; }
+    public bool IsCommandRunning { get; set; }
 
     protected override void OnInitialized()
     {
+        TLS.CommandFinishedEvent = CmdProcess_CommandFinishedEvent;
+    }
+
+    private async void UI_CmdInputKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && string.IsNullOrWhiteSpace(CmdInput)) return;
+        if (e.Key == "Enter" && await CheckSetChannelCommand(CmdInput)) return;
+
+        if (e.Key == "Enter" && CmdInput.ToLower() == "stop")
+        {
+            TLS.KillProcess();
+            TLS.CTS.Cancel();
+            IsCommandRunning = false;
+            CmdInput = "";
+            AddOutputMessage("Cancelled current running command");
+            await TwitchPlayerStop();
+            await ScrollOutputToBottom();
+            StateHasChanged();
+            return;
+        }
+
+        if (e.Key == "Enter" && IsCommandRunning == false)
+        {
+            AddOutputMessage($"Running command: '{CmdInput}'");
+            IsCommandRunning = true;
+            StateHasChanged();
+            await TwitchPlayerPlay();
+            var tmpCmdInput = CmdInput;
+            CmdInput = "";
+            if (!await CheckPredefinedCommands(tmpCmdInput)) TLS.ExecuteCommand(tmpCmdInput);
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> CheckSetChannelCommand(string command)
+    {
+        if(command.StartsWith("channel ", StringComparison.InvariantCultureIgnoreCase))
+        {
+            var channelName = command.Substring("channel ".Length);
+            if (string.IsNullOrWhiteSpace(channelName)) return false;
+
+            AddOutputMessage($"Changed channel to '{channelName}'");
+            await TwitchPlayerSetChannel(channelName);
+            await ScrollOutputToBottom();
+            CmdInput = "";
+
+            StateHasChanged();
+            return true;
+        }
+        return false;
+    }
+
+    private async Task<bool> CheckPredefinedCommands(string command)
+    {
+        switch (command)
+        {
+            case "cls":
+                CmdOutput = "";
+                AddOutputMessage("Cleared Console");
+                await TwitchPlayerStop();
+                await ScrollOutputToBottom();
+                IsCommandRunning = false;
+                return true;
+            case "IWannaHaveFun":
+                AddOutputMessage("It's time for some fun! Enjoy your 2 minutes of no work!");
+                await ScrollOutputToBottom();
+                StateHasChanged();
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(2), TLS.CTS.Token);
+                } catch
+                {
+                    TLS.CTS = new CancellationTokenSource();
+                    AddOutputMessage("Seems like you really want to work huh? No problem!");
+                }
+                AddOutputMessage("Fun's over! Back to work!");
+                await TwitchPlayerStop();
+                await ScrollOutputToBottom();
+                IsCommandRunning = false;
+                return true;
+            default: return false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            await JsRuntime.InvokeVoidAsync("TwitchEmbedStart", "kiwo");
+        }
+    }
+
+    private async void CmdProcess_CommandFinishedEvent(string output, string error)
+    {
+        IsCommandRunning = false;
+
+        if(output == null && error == null)
+        {
+            AddOutputMessage("CMD Command was cancelled!");
+        } else
+        {
+            AddOutputMessage(output.TrimEnd());
+            if(!string.IsNullOrWhiteSpace(error)) AddOutputMessage(error);
+        }
+
+        await InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            await TwitchPlayerStop();
+            await ScrollOutputToBottom();
+        });
+    }
+
+    private void AddOutputMessage(string message)
+    {
+        CmdOutput += $"{message}\r\n";
+    }
+
+    private void ClearOutput()
+    {
+        CmdOutput = "";
+    }
+
+    private async Task ScrollOutputToBottom()
+    {
+        await JsRuntime.InvokeVoidAsync("ScrollOutputToBottom", "twitchline-cmd-output");
+    }
+
+    private async Task TwitchPlayerStop()
+    {
+        await JsRuntime.InvokeVoidAsync("TwitchPlayerStop");
+    }
+
+    private async Task TwitchPlayerPlay()
+    {
+        await JsRuntime.InvokeVoidAsync("TwitchPlayerPlay");
+    }
+
+    private async Task TwitchPlayerSetChannel(string channelName)
+    {
+        await JsRuntime.InvokeVoidAsync("TwitchPlayerSetChannel", channelName);
     }
 }

@@ -66,22 +66,12 @@ namespace TwitchLine
                     Icon = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "TwitchLine_Icon.ico"),
                     Title = "TwitchLine",
                     Center = true,
-                    Height = 400,
-                    Width = 800,
+                    Height = 370,
+                    Width = 630,
                     AutoHideMenuBar = true,
-                    BackgroundColor = "#000000",
-                    WebPreferences = new WebPreferences()
-                    {
-                        WebviewTag = true,
-                        NodeIntegration = false,
-                        NodeIntegrationInWorker = false,
-                        ContextIsolation = false,
-                        Plugins = true
-                    }
+                    BackgroundColor = "#000000"
                 });
-
-                window.WebContents.OpenDevTools();
-                window.RemoveMenu();
+                //window.RemoveMenu();
             });
         }
     }

@@ -17,26 +17,51 @@ body {
 }
 
 #twitchline-cmd {
-    height: 20%;
+    height: 35%;
     width: 100%;
     float: left;
 }
 
-#twitchline-cmd-output {
+#twitchline-cmd-input {
     width: 100%;
-    height: 100%;
+    height: 50px;
     float: left;
     border: none;
     padding: 15px;
+    background: #333333;
+    color: #ffffff;
 }
 
+    #twitchline-cmd-input:focus {
+        outline: 0;
+        outline-color: transparent;
+        outline-style: none;
+    }
+
+#twitchline-cmd-output {
+    width: 100%;
+    height: calc(100% - 50px);
+    float: left;
+    border: none;
+    padding: 15px;
+    background: #000000;
+    color: #ffffff;
+    resize: none;
+}
+
+    #twitchline-cmd-output:focus {
+        outline: 0;
+        outline-color: transparent;
+        outline-style: none;
+    }
+
 #twitchline-video {
-    height: 80%;
+    height: 65%;
     width: 100%;
     float: left;
 }
 
-    #twitchline-video webview {
+    #twitchline-video #twitchline-view {
         height: 100%;
         width: 100%;
         float: left;
