@@ -6,7 +6,7 @@
 
 <div id="twitchline-container">
     <div id="twitchline-cmd">
-        <textarea id="twitchline-cmd-output" readonly>@CmdOutput</textarea>
+        <textarea @onclick="@(async() => { await FocusElement("twitchline-cmd-input"); })" id="twitchline-cmd-output" readonly>@CmdOutput</textarea>
         <b id="twitchline-cmd-input-icon">&gt;</b><input id="twitchline-cmd-input" @bind="CmdInput" type="text" @onkeyup="UI_CmdInputKeyUp" />
     </div>
     <div id="twitchline-video">
@@ -15,7 +15,7 @@
 </div>
 
 @code {
-    public string CmdOutput { get; set; }
+    public string CmdOutput { get; set; } = "Welcome to TwitchLine v1.0!\r\nYou can use this as a regular command line or use some of the predefined commands from the docs.\r\n";
     public string CmdInput { get; set; }
     public bool IsFirstTime { get; set; }
     public bool IsCmdServiceRunning { get; set; }
@@ -59,7 +59,7 @@
 
     private async Task<bool> CheckSetChannelCommand(string command)
     {
-        if(command.StartsWith("channel ", StringComparison.InvariantCultureIgnoreCase))
+        if (command.StartsWith("channel ", StringComparison.InvariantCultureIgnoreCase))
         {
             var channelName = command.Substring("channel ".Length);
             if (string.IsNullOrWhiteSpace(channelName)) return false;
@@ -93,7 +93,8 @@
                 try
                 {
                     await Task.Delay(TimeSpan.FromMinutes(2), TLS.CTS.Token);
-                } catch
+                }
+                catch
                 {
                     TLS.CTS = new CancellationTokenSource();
                     AddOutputMessage("Seems like you really want to work huh? No problem!");
@@ -111,7 +112,8 @@
     {
         if (firstTime)
         {
-            await JsRuntime.InvokeVoidAsync("TwitchEmbedStart", "Twitch");
+            await TwitchSetup();
+            await FocusElement("twitchline-cmd-input");
         }
     }
 
@@ -119,13 +121,14 @@
     {
         IsCommandRunning = false;
 
-        if(output == null && error == null)
+        if (output == null && error == null)
         {
             AddOutputMessage("CMD Command was cancelled!");
-        } else
+        }
+        else
         {
             AddOutputMessage(output.TrimEnd());
-            if(!string.IsNullOrWhiteSpace(error)) AddOutputMessage(error);
+            if (!string.IsNullOrWhiteSpace(error)) AddOutputMessage(error);
         }
 
         await InvokeAsync(async () =>
@@ -151,6 +154,11 @@
         await JsRuntime.InvokeVoidAsync("ScrollOutputToBottom", "twitchline-cmd-output");
     }
 
+    private async Task TwitchSetup()
+    {
+        await JsRuntime.InvokeVoidAsync("TwitchEmbedStart", "Twitch");
+    }
+
     private async Task TwitchPlayerStop()
     {
         await JsRuntime.InvokeVoidAsync("TwitchPlayerStop");
@@ -164,5 +172,10 @@
     private async Task TwitchPlayerSetChannel(string channelName)
     {
         await JsRuntime.InvokeVoidAsync("TwitchPlayerSetChannel", channelName);
+    }
+
+    private async Task FocusElement(string elementId)
+    {
+        await JsRuntime.InvokeVoidAsync("FocusElement", elementId);
     }
 }

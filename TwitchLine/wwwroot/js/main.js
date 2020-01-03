@@ -41,3 +41,7 @@ window.ScrollOutputToBottom = (outputId) => {
     var outputArea = document.getElementById(outputId);
     outputArea.scrollTop = outputArea.scrollHeight;
 };
+
+window.FocusElement = (elementId) => {
+    document.getElementById(elementId).focus(); 
+};
