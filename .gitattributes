@@ -3,6 +3,7 @@
 ###############################################################################
 * text=auto
 
+Index.razor linguist-vendored=true
 _Host.cshtml linguist-vendored=true
 App.razor linguist-vendored=true
 
